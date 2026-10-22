@@ -1,0 +1,14 @@
+[Unit]
+Description=tunnler: wstunnel-Container vom Heimnetz trennen
+After=docker.service
+PartOf=docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/default/tunnler-firewall
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/tunnler-firewall.sh
+ExecStop=/usr/local/sbin/tunnler-firewall.sh --remove
+
+[Install]
+WantedBy=multi-user.target docker.service

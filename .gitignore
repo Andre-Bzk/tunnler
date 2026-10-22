@@ -1,0 +1,23 @@
+# Enthalten das Tunnel-Secret
+client/config.ps1
+server/restrictions.yaml
+
+# Installationsspezifisch
+server/.env
+
+# Wird beim ersten Start von GitHub geladen
+client/bin/
+
+# Laufzeitdaten
+client/logs/
+client/chrome-profile/
+
+# Interne Notizen (Heim-IP, Domain, NPM-Details)
+notes/
+
+# Editor und Windows
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+*.bak
