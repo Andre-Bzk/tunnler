@@ -14,7 +14,11 @@ $LogDir = Join-Path $ClientDir 'logs'
 $ProxyUrl = "http://$LocalProxy"
 
 function Get-TunnelArgs([string]$LogLevel) {
-    $tunnelArgs = @('client', '-L', "http://$LocalProxy", '-c', '2', '--log-lvl', $LogLevel)
+    # Windows-Resolver statt des eingebauten: Manche DNS-Server liefern EDNS-Antworten,
+    # die wstunnel nicht lesen kann. Dann scheitert jede Verbindung, und mit -c wartet
+    # der Client endlos auf den Pool, bevor er den lokalen Port oeffnet.
+    $tunnelArgs = @('client', '-L', "http://$LocalProxy", '-c', '2', '--log-lvl', $LogLevel,
+        '--dns-resolver', 'system://0.0.0.0')
     if (-not $SkipTlsVerify) { $tunnelArgs += '--tls-verify-certificate' }
     if ($UpstreamProxy) { $tunnelArgs += @('--http-proxy', $UpstreamProxy) }
     if ($UpstreamProxyUser) { $tunnelArgs += @('--http-proxy-login', $UpstreamProxyUser) }
@@ -44,7 +48,8 @@ function Invoke-WithTunnelEnv([scriptblock]$Action) {
 function Test-TunnelListening {
     $parts = $LocalProxy.Split(':')
     $client = New-Object System.Net.Sockets.TcpClient
-    try { $client.Connect($parts[0], [int]$parts[1]); return $true }
+    # Connect() auf einen geschlossenen Port dauert unter Windows ~2 s (SYN-Wiederholungen)
+    try { return $client.ConnectAsync($parts[0], [int]$parts[1]).Wait(500) -and $client.Connected }
     catch { return $false }
     finally { $client.Close() }
 }
